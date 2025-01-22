@@ -74,6 +74,9 @@
 //#define BOARD_ZTH05				33 // Tuya ZigBee TS0601_TZE204 and BLE
 //#define BOARD_PHY6252				34 // Tuya BLE (not yet published at the moment)
 #define BOARD_CB3S					35 // Tuya ZigBee "Smart Button" TS0041_TZ3000_fa9mlvja (In developing...)
+#define BOARD_MH					36
+#define BOARD_TS0201_TZ3000_v1w2k9dd 37
+
 
 /* Board define */
 #ifndef BOARD
@@ -103,7 +106,7 @@
 #endif
 
 #define APP_RELEASE				0x01	//BCD app release "0.1"
-#define APP_BUILD				0x23	//BCD app build "2.3"
+#define APP_BUILD				0x24	//BCD app build "2.3"
 #define STACK_RELEASE			0x30	//BCD stack release 3.0
 #define STACK_BUILD				0x01	//BCD stack build 01
 
@@ -113,6 +116,8 @@
  */
 #define MANUFACTURER_CODE_TELINK           	0x1141	// Telink ID
 #define	IMAGE_TYPE							((CHIP_TYPE << 8) | BOARD)
+//#define MANUFACTURER_CODE_TELINK           	0x1002	// Tuya ID
+//#define	IMAGE_TYPE							0x203
 #define	FILE_VERSION					  	((APP_RELEASE << 24) | (APP_BUILD << 16) | (STACK_RELEASE << 8) | STACK_BUILD)
 
 /* Pre-compiled link configuration. */

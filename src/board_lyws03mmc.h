@@ -4,12 +4,12 @@
  * @brief   This is the header file for board_8258_lywsd03mmc
  *
  *******************************************************************************************************/
-#ifndef _BOARD_LYWS03MMC_H_
-#define _BOARD_LYWS03MMC_H_
+#ifndef _BOARD_MH_H_
+#define _BOARD_MH_H_
 
 #include "version_cfg.h"
 
-#if (BOARD == BOARD_LYWSD03MMC)
+#if (BOARD == BOARD_MH)
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
 extern "C" {
@@ -19,22 +19,17 @@ extern "C" {
 
 
 // BUTTON
-#define BUTTON1				GPIO_PA5  // reset test point
-#define PA5_FUNC			AS_GPIO
-#define PA5_OUTPUT_ENABLE	0
-#define PA5_INPUT_ENABLE	1
-#define	PULL_WAKEUP_SRC_PA5	PM_PIN_PULLUP_10K
+#define BUTTON1				GPIO_PB4
+#define PB4_FUNC			AS_GPIO
+#define PB4_OUTPUT_ENABLE	0
+#define PB4_INPUT_ENABLE	1
+#define	PULL_WAKEUP_SRC_PB4	PM_PIN_PULLUP_10K
 
 // DISPLAY
-#define SHOW_SMILEY			1
-#define	USE_DISPLAY			1
-#define LCD_BUF_SIZE		6
-#define PULL_WAKEUP_SRC_PB6 PM_PIN_PULLUP_10K // LCD
-#define PULL_WAKEUP_SRC_PD7	PM_PIN_PULLUP_1M // UART TX (B1.6)
-#define LCD_INIT_DELAY()	pm_wait_ms(50)
+#define	USE_DISPLAY			0
 
 // I2C
-#define	USE_I2C_DRV			1
+#define	USE_I2C_DRV_SW		1
 #define I2C_CLOCK			400000 // Hz
 #define SENSOR_TYPE 		SENSOR_SHTC3_4X
 #define USE_SENSOR_ID		0
@@ -68,5 +63,5 @@ extern "C" {
 #if defined(__cplusplus)
 }
 #endif
-#endif // (BOARD == BOARD_LYWSD03MMC)
-#endif // _BOARD_LYWS03MMC_H_
+#endif // (BOARD == BOARD_MH)
+#endif // _BOARD_MH_H_

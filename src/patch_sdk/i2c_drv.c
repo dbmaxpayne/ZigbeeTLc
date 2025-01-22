@@ -164,3 +164,296 @@ int I2CBusUtr(void * outdata, i2c_utr_t * tr, unsigned int wrlen) {
 }
 
 #endif // #if USE_I2C_DRV
+
+#if USE_I2C_DRV_SW
+
+#define _I2C_SEG_
+
+enum {
+	GPIO_INPUT_MODE,
+	GPIO_OUTPUT_MODE,
+};
+
+_I2C_SEG_
+void init_i2c(void)
+	{
+		// Already done in board definition
+		// Function not required
+		gpio_set_func(I2C_SDA, AS_GPIO);
+		gpio_set_func(I2C_SCL, AS_GPIO);
+
+		gpio_set_output_en(I2C_SDA, 1);
+		gpio_set_input_en(I2C_SDA, 0);
+
+		gpio_set_output_en(I2C_SCL, 1);
+		gpio_set_input_en(I2C_SCL, 0);
+	}
+
+void i2c_sda_pin_mode_set(unsigned char mode, unsigned char level)
+	{
+		if (mode == GPIO_INPUT_MODE)
+			{
+				gpio_set_input_en(I2C_SDA, 1);
+				gpio_set_output_en(I2C_SDA, 0);
+			}
+		else if(mode == GPIO_OUTPUT_MODE)
+			{
+				gpio_set_input_en(I2C_SDA, 0);
+				gpio_set_output_en(I2C_SDA, 1);
+			}
+	}
+
+void i2c_sda_pin_set(unsigned char level)
+	{
+		gpio_write(I2C_SDA, level);
+	}
+
+void i2c_scl_pin_set(unsigned char level)
+	{
+		gpio_write(I2C_SCL, level);
+	}
+
+unsigned char i2c_sda_pin_status_get(void)
+	{
+		return (!gpio_read(I2C_SDA))?0:1;
+	}
+
+void i2c_delay(unsigned long tim_1us)
+	{
+		sleep_us(tim_1us);
+	}
+
+void i2c_ack(void)
+	{
+		i2c_scl_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_sda_pin_mode_set(GPIO_OUTPUT_MODE, 0);
+		i2c_sda_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_scl_pin_set(1);
+		i2c_delay(I2C_CLOCK);
+		i2c_scl_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+	}
+
+void i2c_noack(void)
+	{
+		i2c_sda_pin_mode_set(GPIO_OUTPUT_MODE, 1);
+		i2c_sda_pin_set(1);
+
+		i2c_delay(I2C_CLOCK);
+		i2c_scl_pin_set(1);
+		i2c_delay(I2C_CLOCK);
+		i2c_scl_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+	}
+
+/**
+ * @description: i2c wait ack
+ * @param {type} none
+ * @return: rev ack return true else return false
+ */
+unsigned char i2c_wait_ack(void)
+{
+	unsigned char cnt = 50;
+
+    i2c_sda_pin_mode_set(GPIO_INPUT_MODE, 1);/* set input and release SDA */
+    i2c_sda_pin_set(1);
+    i2c_delay(I2C_CLOCK);
+
+    i2c_scl_pin_set(0);       /* put down SCL ready to cheack SCA status */
+    i2c_delay(I2C_CLOCK);
+
+    i2c_scl_pin_set(1);
+    i2c_delay(I2C_CLOCK);
+
+    while (i2c_sda_pin_status_get()) { /* get ack */
+        cnt--;
+        if (cnt == 0) {
+            i2c_scl_pin_set(0);
+            return false;
+        }
+        i2c_delay(I2C_CLOCK);
+    }
+
+    i2c_scl_pin_set(0);
+    i2c_delay(I2C_CLOCK);
+    return true;
+}
+
+unsigned char scan_i2c_addr(unsigned char address)
+	{
+		unsigned char r = irq_disable();
+		unsigned char ack = false;
+
+		i2c_start();
+		send_i2c_byte_raw(address);
+		ack = i2c_wait_ack();
+		i2c_stop();
+
+		irq_restore(r);
+		return (ack?address:0);
+	}
+
+void send_i2c_byte_raw(unsigned char data)
+	{
+		unsigned char idx = 0;
+
+	    i2c_scl_pin_set(0);
+	    i2c_sda_pin_mode_set(GPIO_OUTPUT_MODE, 1);
+
+	    for (idx = 0; idx < 8; idx++)
+	    	{
+	    		i2c_delay(I2C_CLOCK/2);
+	        	if (data & 0x80) i2c_sda_pin_set(1);
+	        	else i2c_sda_pin_set(0);
+				i2c_delay(I2C_CLOCK/2);
+
+				i2c_scl_pin_set(1);
+				i2c_delay(I2C_CLOCK);
+
+				i2c_scl_pin_set(0);
+				i2c_delay(I2C_CLOCK);
+
+				data <<= 1;
+	    	}
+	}
+
+int send_i2c_byte(unsigned char i2c_addr, unsigned char cmd)
+	{
+		unsigned char r = irq_disable();
+		int ack = false;
+
+		i2c_start();
+
+		send_i2c_byte_raw(i2c_addr);
+		ack = i2c_wait_ack();
+
+		if (ack == true)
+			{
+				send_i2c_byte_raw(cmd);
+				ack = i2c_wait_ack();
+			}
+
+		i2c_stop();
+
+		irq_restore(r);
+
+		return (ack?0:-1);
+	}
+
+_I2C_SEG_
+int send_i2c_bytes(unsigned char i2c_addr, unsigned char * dataBuf, size_t dataLen)
+	{
+		int ack = 0;
+		unsigned char idx;
+		unsigned char r = irq_disable();
+
+		i2c_start();
+
+		send_i2c_byte_raw(i2c_addr);
+		ack = i2c_wait_ack();
+
+		if (ack == true)
+			{
+				for (idx = 0; idx < dataLen; idx++)
+					{
+						send_i2c_byte_raw(dataBuf[idx]);
+			        	ack = i2c_wait_ack();
+			        	if (ack != true) break;
+					}
+			}
+
+		i2c_stop();
+
+		irq_restore(r);
+		return (ack?0:-1);
+	}
+
+void i2c_rcv_byte(unsigned char *data)
+	{
+		unsigned char idx;
+		i2c_sda_pin_mode_set(GPIO_INPUT_MODE, 1);
+		i2c_delay(25);
+
+		for (idx = 0; idx < 8; idx++)
+			{
+				i2c_scl_pin_set(0);
+				i2c_delay(I2C_CLOCK);
+
+				i2c_scl_pin_set(1);
+				*data = *data << 1;
+				if (i2c_sda_pin_status_get()) *data |= 1;
+				i2c_delay(I2C_CLOCK);
+			}
+
+		i2c_scl_pin_set(0);
+	}
+
+_I2C_SEG_
+int read_i2c_bytes(unsigned char i2c_addr, unsigned char * dataBuf, int dataLen)
+	{
+		unsigned char r = irq_disable();
+		unsigned char idx;
+		unsigned char ack;
+
+		// Increment address by one to switch chip to read mode
+		i2c_addr = i2c_addr | 0x1;
+
+		i2c_start();
+
+		send_i2c_byte_raw(i2c_addr);
+		ack = i2c_wait_ack();
+
+		if (ack == true)
+			{
+				for (idx = 0; idx < dataLen; idx++)
+					{
+						i2c_rcv_byte(&dataBuf[idx]);
+
+						if (idx < dataLen-1) i2c_ack();
+						else i2c_noack();
+					}
+			}
+
+		i2c_stop();
+
+		irq_restore(r);
+		return (ack?0:-1);
+	}
+
+void i2c_start(void)
+	{
+		//init_i2c();
+
+		i2c_sda_pin_mode_set(GPIO_OUTPUT_MODE, 1);
+
+		i2c_scl_pin_set(1);
+		i2c_sda_pin_set(1);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_sda_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_scl_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+	}
+
+void i2c_stop(void)
+	{
+		i2c_sda_pin_mode_set(GPIO_OUTPUT_MODE, 0);
+
+		i2c_scl_pin_set(0);
+		i2c_sda_pin_set(0);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_scl_pin_set(1);
+		i2c_delay(I2C_CLOCK);
+
+		i2c_sda_pin_set(1);
+		i2c_delay(I2C_CLOCK);
+	}
+
+#endif // #if USE_I2C_DRV_SW

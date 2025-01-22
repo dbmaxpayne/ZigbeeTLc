@@ -54,6 +54,7 @@ extern "C" {
 #define SENSOR_SHTC3_4X	1
 #define SENSOR_CHT8305	2
 #define SENSOR_SHT30	3
+#define SENSOR_CHT832X	4
 
 /* Board include */
 #if defined(BOARD)
@@ -63,6 +64,7 @@ extern "C" {
 #include "board_mho_c401.h"
 #include "board_mho_c401n.h"
 #include "board_ts0201_tz3000.h"
+#include "board_ts0201_tz3000_v1w2k9dd.h"
 #include "board_th03z.h"
 #include "board_zth01_02.h"
 #include "board_zth03.h"

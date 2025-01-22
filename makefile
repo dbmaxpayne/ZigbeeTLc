@@ -1,7 +1,8 @@
 
-PROJECT_NAME ?= z03mmc
+PROJECT_NAME ?= mh_custom
 VERSION_BIN ?=
 
+POJECT_DEF ?= -DBOARD=BOARD_TS0201_TZ3000_v1w2k9dd
 TEL_CHIP := $(POJECT_DEF) -DMCU_CORE_8258=1 -DEND_DEVICE=1 -DMCU_STARTUP_8258=1
 
 LIBS := -ldrivers_8258 -lzb_ed
@@ -26,7 +27,7 @@ LS_FLAGS := $(SRC_PATH)/boot.link
 OUT_PATH ?=./build
 BIN_PATH ?=./bin
 
-PYTHON ?= python3
+PYTHON ?= python
 
 OBJ_SRCS :=
 S_SRCS :=
@@ -157,7 +158,10 @@ $(OTA_FILE): $(BIN_FILE)
 	@echo ' '
 
 sizedummy: $(ELF_FILE)
+	@echo 'bla'
 	@$(PYTHON) $(MAKE_PATH)/TlsrMemInfo.py -t $(TC32_PATH)tc32-elf-nm $(ELF_FILE)
+	@echo 'blub'
+	@echo $(POJECT_DEF)
 	@echo ' '
 
 clean:

@@ -11,7 +11,12 @@
 /**********************************************************************
  * LOCAL CONSTANTS
  */
-#if BOARD == BOARD_LYWSD03MMC
+#if BOARD == BOARD_MH
+
+#define ZCL_BASIC_MFG_NAME     {6,'X','i','a','o','m','i'}
+#define ZCL_BASIC_MODEL_ID	   {2,'M','H'}
+
+#elif BOARD == BOARD_LYWSD03MMC
 
 #define ZCL_BASIC_MFG_NAME     {6,'X','i','a','o','m','i'}
 #define ZCL_BASIC_MODEL_ID	   {12,'L','Y','W','S','D','0','3','M','M','C','-','z'}
@@ -37,6 +42,11 @@
 #define ZCL_BASIC_MODEL_ID	   {11,'M','H','O','-','C','4','0','1','N','-','z'} // MHO-C401N
 
 #elif BOARD == BOARD_TS0201_TZ3000
+
+#define ZCL_BASIC_MFG_NAME     {4,'T','u','y','a'} // Tuya
+#define ZCL_BASIC_MODEL_ID	   {8,'T','S','0','2','0','1','-','z'} // TS0201
+
+#elif BOARD == BOARD_TS0201_TZ3000_v1w2k9dd
 
 #define ZCL_BASIC_MFG_NAME     {4,'T','u','y','a'} // Tuya
 #define ZCL_BASIC_MODEL_ID	   {8,'T','S','0','2','0','1','-','z'} // TS0201
